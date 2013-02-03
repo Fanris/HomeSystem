@@ -101,23 +101,21 @@ class GPIOController(object):
         while not self.stop:
             inpNew = self.getGPIOInput()
 
-        for i in inpNew.keys():
-            if inp[i] == inpNew[i]:
-                inp = inpNew
-                continue
+            for i in inpNew.keys():               
+                if inp[i] != inpNew[i]:
+                    print "Wert von {} hat sich geaendert".format(i)
+                    if self.pinConfiguration[i].get("flank", None) == GPIOController.GPIO_EVERY_FLANK:
+                        if self.callback:
+                            self.callback(i)
 
-            if inp[i] < inpNew[i] and \
-                self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_RISING_FLANK:
-                inp = inpNew
-                continue
+                    if inp[i] > inpNew[i] and \
+                        self.pinConfiguration[i].get("flank", None) == GPIOController.GPIO_FALLING_FLANK:
+                        if self.callback:
+                            self.callback(i)
 
-            if inp[i] > inpNew[i] and \
-                self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_FALLING_FLANK:
-                inp = inpNew
-                continue
+                    if inp[i] < inpNew[i] and \
+                        self.pinConfiguration[i].get("flank", None) == GPIOController.GPIO_RISING_FLANK:
+                        if self.callback:
+                            self.callback(i)
 
-        self.logger.info("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
-        if self.callback:
-                    self.callback(i)
-
-        inp = inpNew
+            inp = inpNew
