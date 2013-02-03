@@ -37,16 +37,3 @@ class UdpProtocol(DatagramProtocol):
         @result:
         '''
         self.udpServer.messageReceived(data, host, port)
-
-    def startProtocol(self):
-        '''
-        @summary: Called after protocol has started listening.
-        '''
-        # Set the TTL>1 so multicast will cross router hops:
-        self.transport.setTTL(1)
-
-        # Join a specific multicast group:
-        self.transport.joinGroup(self.udpServer.multicastGroup)
-
-        # Create LoopingCall to Broadcast "Server available" every 30 sec
-        self.udpServer.sendServerAvailableBroadcast()

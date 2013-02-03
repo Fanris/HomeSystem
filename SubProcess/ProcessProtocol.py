@@ -23,10 +23,7 @@ class ProcessProtocol(protocol.ProcessProtocol):
     def errReceived(self, data):
         self.errOut.append(data)
 
-    def processEnded(self, status):
-        self.stdOutput.close()
-        self.errOutput.close()
-
+    def processEnded(self, status):       
         if status.value.exitCode == 0:
             self.processHandler.processCompleted(self.processName)
         else:

@@ -34,11 +34,13 @@ class GPIOController(object):
         self.io = wiringpi.GPIO(wiringpi.GPIO.WPI_MODE_PINS)
 
         # Set GPIO Input/Output
-        self.setGPIOPin(0, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_RISING_FLANK)
-        self.setGPIOPin(3, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_RISING_FLANK)
-        self.setGPIOPin(4, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_RISING_FLANK)
-        self.setGPIOPin(5, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_RISING_FLANK)
-        self.setGPIOPin(6, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_RISING_FLANK)
+        self.setGPIOPin(0, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
+        self.setGPIOPin(3, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
+        self.setGPIOPin(4, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
+        self.setGPIOPin(5, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
+        self.setGPIOPin(6, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
+
+	print self.pinConfiguration
 
     def setGPIOPin(self, pin, mode=None, reactToFlank=GPIO_EVERY_FLANK):
         '''
@@ -62,9 +64,9 @@ class GPIOController(object):
         the pin value as value
         '''
         returnDict = {}
-        for key, value in self.pinConfiguration.iteritems():
-            if value == 1:
-                returnDict[key] = self.io.digitalRead(key)
+        for pin in self.pinConfiguration.keys():
+            if  self.pinConfiguration[pin].get("mode", None) == 1:
+                returnDict[pin] = self.io.digitalRead(pin)
 
         return returnDict
 
@@ -79,6 +81,7 @@ class GPIOController(object):
         '''
         self.callback = callbackFunction
         self.stop = False;
+	self.logger.info("Starte GPIO Loop")
         reactor.callInThread(self.GPIOLoop)
 
     def stopGPIOLoop(self):
@@ -98,19 +101,25 @@ class GPIOController(object):
         inp = self.getGPIOInput()
 
         while not self.stop:
-            inpNew = self.getGPIOInput()
-
-            for i in inpNew.keys():
+            inpNew = self.getGPIOInput()	   
+	    for i in inpNew.keys():
+		#print "Checking {}: old {}, new {}".format(i, inp[i], inpNew[i])
                 if inp[i] == inpNew[i]:
+		    inp = inpNew
                     continue
 
                 if inp[i] < inpNew[i] and \
                     self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_RISING_FLANK:
-                    continue
+		    inp = inpNew
+		    continue
 
                 if inp[i] > inpNew[i] and \
                     self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_FALLING_FLANK:
-                    continue
+		    inp = inpNew
+		    continue
 
-                if self.callback:
+		self.logger.info("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
+		if self.callback:
                     self.callback(i)
+		
+		inp = inpNew

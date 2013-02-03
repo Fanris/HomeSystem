@@ -28,7 +28,7 @@ class SubProcessController(object):
         '''
 
         parameter = [executable]
-        parameter.append(params)
+        parameter.extend(params)
         self.logger.debug("Starte {}".format(executable))
         reactor.spawnProcess(ProcessProtocol(executable, self), executable=executable,
             args=parameter, env=os.environ)

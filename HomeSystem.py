@@ -19,7 +19,7 @@ from GPIO import GPIOController
 from SubProcess import SubProcessController
 
 # Twisted
-from internet.twisted import reactor
+from twisted.internet import reactor
 
 import logging
 import json
@@ -56,10 +56,15 @@ class HomeSystem(object):
         # Setup GPIO
         self.logger.info("Initialisiere GPIO Controller")
         self.gpio = GPIOController()
-        self.gpio.startGPIOLoop()
+        self.gpio.startGPIOLoop(self.reactToGPIOFlank)
 
         # Setting up twisted
-        reactor.run()
+	try:
+	    reactor.addSystemEventTrigger("before", "shutdown", self.stop)
+            reactor.run()
+	except KeyboardInterrupt:
+	    self.logger.info("Stopping HomeSystem")
+	    reactor.stop()
 
     def reactToGPIOFlank(self, pin):
         '''
@@ -73,24 +78,24 @@ class HomeSystem(object):
                 "http://192.168.191.10:80/rasp_4_toilette.ssi",
                 "--http-user=admin",
                 "--http-password=wago",
-                "-q")
+                "q")
 
-        elif pin == 3:
+        if pin == 3:
             self.logger.info("Licht Wohnzimmer und Musik")
             self.subProcessController.startProcess("wget",
                 "http://192.168.191.10:80/rasp_3_licht_musik.ssi",
                 "--http-user=admin",
                 "--http-password=wago",
-                "-q")
+                "q")
             self.p.push("Raspi", 'Haus', 'Test', batch_mode=False)
 
-        elif pin == 4:
+        if pin == 4:
             self.logger.info("Licht Wohnzimmer und Fernseher")
             self.subProcessController.startProcess("wget",
                 "http://192.168.191.10:80/rasp_2_fernseher.ssi",
                 "--http-user=admin",
                 "--http-password=wago",
-                "-q")
+                "q")
 
             self.subProcessController.startProcess("wget",
                 "http://192.168.191.9/web/powerstate?newstate=4")
@@ -118,8 +123,11 @@ class HomeSystem(object):
         self.voice(data)
 
     def voice(self, data):
-        message = data.get("data", "")
-        self.subProcessController.startProcess("espeak", "-v de", message)
+        # message = data.get("data", "")
+        self.subProcessController.startProcess("espeak", "v", "de", data)
+
+    def stop(self):
+	self.gpio.stopGPIOLoop()
 
     def initializeLogger(self, debug=False):
         '''
