@@ -40,8 +40,6 @@ class GPIOController(object):
         self.setGPIOPin(5, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
         self.setGPIOPin(6, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
 
-	print self.pinConfiguration
-
     def setGPIOPin(self, pin, mode=None, reactToFlank=GPIO_EVERY_FLANK):
         '''
         @summary: Sets the GPIO pin to Input Mode
@@ -81,7 +79,7 @@ class GPIOController(object):
         '''
         self.callback = callbackFunction
         self.stop = False;
-	self.logger.info("Starte GPIO Loop")
+        self.logger.info("Starte GPIO Loop")
         reactor.callInThread(self.GPIOLoop)
 
     def stopGPIOLoop(self):
@@ -101,25 +99,25 @@ class GPIOController(object):
         inp = self.getGPIOInput()
 
         while not self.stop:
-            inpNew = self.getGPIOInput()	   
-	    for i in inpNew.keys():
-		#print "Checking {}: old {}, new {}".format(i, inp[i], inpNew[i])
-                if inp[i] == inpNew[i]:
-		    inp = inpNew
-                    continue
+            inpNew = self.getGPIOInput()
 
-                if inp[i] < inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_RISING_FLANK:
-		    inp = inpNew
-		    continue
+        for i in inpNew.keys():
+            if inp[i] == inpNew[i]:
+                inp = inpNew
+                continue
 
-                if inp[i] > inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_FALLING_FLANK:
-		    inp = inpNew
-		    continue
+            if inp[i] < inpNew[i] and \
+                self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_RISING_FLANK:
+                inp = inpNew
+                continue
 
-		self.logger.info("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
-		if self.callback:
+            if inp[i] > inpNew[i] and \
+                self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_FALLING_FLANK:
+                inp = inpNew
+                continue
+
+        self.logger.info("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
+        if self.callback:
                     self.callback(i)
-		
-		inp = inpNew
+
+        inp = inpNew

@@ -47,5 +47,5 @@ class SubProcessController(object):
         @param processName: the name of the process
         @result:
         '''
-        self.logger.warning("{} fehlgeschlagen!".format(processName))
+        self.logger.debug("{} fehlgeschlagen!".format(processName))
 
