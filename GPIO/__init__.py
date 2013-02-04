@@ -28,19 +28,11 @@ class GPIOController(object):
         self.pinConfiguration = {}
         self.reactToFlank = GPIOController.GPIO_EVERY_FLANK
         self.stop = True
-        self.callback = None
 
         # Set GPIO Pins
         self.io = wiringpi.GPIO(wiringpi.GPIO.WPI_MODE_PINS)
 
-        # Set GPIO Input/Output
-        self.setGPIOPin(0, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
-        self.setGPIOPin(3, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
-        self.setGPIOPin(4, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
-        self.setGPIOPin(5, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
-        self.setGPIOPin(6, mode=GPIOController.GPIO_MODE_INPUT, reactToFlank=GPIOController.GPIO_FALLING_FLANK)
-
-    def setGPIOPin(self, pin, mode=None, reactToFlank=GPIO_EVERY_FLANK):
+    def setGPIOPin(self, pin, callback=None, mode=None, reactToFlank=GPIO_EVERY_FLANK):
         '''
         @summary: Sets the GPIO pin to Input Mode
         @param pin: The pin number
@@ -49,10 +41,12 @@ class GPIOController(object):
         '''
         if mode == 1:
             self.io.pinMode(pin, self.io.INPUT)
-            self.pinConfiguration[pin] = { "mode": mode, "flank": reactToFlank }
+            self.pinConfiguration[pin] = { "mode": mode, "flank": reactToFlank,
+                "callback": callback}
         elif mode == 0:
             self.io.pinMode(pin, self.io.OUTPUT)
-            self.pinConfiguration[pin] = { "mode": mode, "flank": reactToFlank }
+            self.pinConfiguration[pin] = { "mode": mode, "flank": reactToFlank,
+                "callback": callback}
 
 
     def getGPIOInput(self):
@@ -69,7 +63,7 @@ class GPIOController(object):
         return returnDict
 
 
-    def startGPIOLoop(self, callbackFunction=None):
+    def startGPIOLoop(self):
         '''
         @summary: Starts the GPIO Loop Thread.
         @param callbackFunction: A callback Function which is called when a
@@ -77,7 +71,6 @@ class GPIOController(object):
         pin number as a parameter
         @result:
         '''
-        self.callback = callbackFunction
         self.stop = False;
         self.logger.info("Starte GPIO Loop")
         reactor.callInThread(self.GPIOLoop)
@@ -116,8 +109,9 @@ class GPIOController(object):
                 inp = inpNew
                 continue
 
-        self.logger.info("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
-        if self.callback:
-                    self.callback(i)
+            self.logger.debug("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
+            func = self.pinConfiguration[i].get("callback", None)
+            if func:
+                func(i)
 
         inp = inpNew
