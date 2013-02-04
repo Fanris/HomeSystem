@@ -94,24 +94,24 @@ class GPIOController(object):
         while not self.stop:
             inpNew = self.getGPIOInput()
 
-        for i in inpNew.keys():
-            if inp[i] == inpNew[i]:
-                inp = inpNew
-                continue
+            for i in inpNew.keys():
+                if inp[i] == inpNew[i]:
+                    inp = inpNew
+                    continue
 
-            if inp[i] < inpNew[i] and \
-                self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_RISING_FLANK:
-                inp = inpNew
-                continue
+                if inp[i] < inpNew[i] and \
+                    self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_RISING_FLANK:
+                    inp = inpNew
+                    continue
 
-            if inp[i] > inpNew[i] and \
-                self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_FALLING_FLANK:
-                inp = inpNew
-                continue
+                if inp[i] > inpNew[i] and \
+                    self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_FALLING_FLANK:
+                    inp = inpNew
+                    continue
 
-            self.logger.debug("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
-            func = self.pinConfiguration[i].get("callback", None)
-            if func:
-                func(i)
+                self.logger.debug("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
+                func = self.pinConfiguration[i].get("callback", None)
+                if func:
+                    func(i)
 
-        inp = inpNew
+            inp = inpNew
