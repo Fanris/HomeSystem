@@ -13,10 +13,13 @@ from pyrowl import Pyrowl
 from UdpListener import UdpListener
 
 # GPIO
-from GPIO import GPIOController
+from GPIO import *
 
 # SubProcessHandler
 from SubProcess import SubProcessController
+
+# Scenes
+import Scenes
 
 # Twisted
 from twisted.internet import reactor
@@ -56,6 +59,7 @@ class HomeSystem(object):
         # Setup GPIO
         self.logger.info("Initialisiere GPIO Controller")
         self.gpio = GPIOController()
+        self.setupGPIOPins()
         self.gpio.startGPIOLoop(self.reactToGPIOFlank)
 
         # Setting up twisted
@@ -66,6 +70,27 @@ class HomeSystem(object):
 	    self.logger.info("Stopping HomeSystem")
 	    reactor.stop()
 
+    def setupGPIOPins(self):
+        '''
+        @summary: Configures the GPIO Pins
+        @result:
+        '''
+        self.gpio.setGPIOPin(0, self.reactToGPIOFlank,
+            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+
+        self.gpio.setGPIOPin(3, self.reactToGPIOFlank,
+            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+
+        self.gpio.setGPIOPin(4, self.reactToGPIOFlank,
+            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+
+        self.gpio.setGPIOPin(5, self.reactToGPIOFlank,
+            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+
+        self.gpio.setGPIOPin(6, self.reactToGPIOFlank,
+            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+
+
     def reactToGPIOFlank(self, pin):
         '''
         @summary: Is called when a GPIO-Pin changes its value
@@ -73,32 +98,13 @@ class HomeSystem(object):
         @result:
         '''
         if pin == 0:
-            self.logger.info("Licht Bad und Rollade")
-            self.subProcessController.startProcess("wget",
-                "http://192.168.191.10:80/rasp_4_toilette.ssi",
-                "--http-user=admin",
-                "--http-password=wago",
-                "q")
+            Scenes.Licht_Bad_Rollade()
 
         if pin == 3:
-            self.logger.info("Licht Wohnzimmer und Musik")
-            self.subProcessController.startProcess("wget",
-                "http://192.168.191.10:80/rasp_3_licht_musik.ssi",
-                "--http-user=admin",
-                "--http-password=wago",
-                "q")
-            self.p.push("Raspi", 'Haus', 'Test', batch_mode=False)
+            Scenes.Licht_Wohnzimmer_Musik()
 
         if pin == 4:
-            self.logger.info("Licht Wohnzimmer und Fernseher")
-            self.subProcessController.startProcess("wget",
-                "http://192.168.191.10:80/rasp_2_fernseher.ssi",
-                "--http-user=admin",
-                "--http-password=wago",
-                "q")
-
-            self.subProcessController.startProcess("wget",
-                "http://192.168.191.9/web/powerstate?newstate=4")
+            Scenes.Licht_Wohnzimmer_Fernsehr()
 
     def messageReceived(self, data, host, port):
         '''
@@ -110,21 +116,20 @@ class HomeSystem(object):
 
         # Command Parser
         # ===================================
-        # self.logger.debug("Message received: {}".format(data))
-        # commandDict = json.loads(data)
+        self.logger.debug("Message received: {}".format(data))
+        commandDict = json.loads(data)
 
-        # # Run command....
-        # self.logger.debug("Run command {}".format(commandDict.get("command", None)))
-        # if hasattr(self, commandDict.get("command", None)):
-        #     getattr(self, commandDict.get("command", None))(commandDict)
-        # else:
-        #     self.logger.warning("Command {} is not defined.".format(commandDict.get("command")))
+        # Run command....
+        self.logger.debug("Run command {}".format(commandDict.get("command", None)))
+        if hasattr(self, commandDict.get("command", None)):
+            getattr(self, commandDict.get("command", None))(commandDict)
+        else:
+            self.logger.warning("Command {} is not defined.".format(commandDict.get("command")))
 
-        self.voice(data)
 
     def voice(self, data):
-        # message = data.get("data", "")
-        self.subProcessController.startProcess("espeak", "v", "de", data)
+        message = data.get("data", "")
+        self.subProcessController.startProcess("espeak", "-v", "de", message)
 
     def stop(self):
 	self.gpio.stopGPIOLoop()

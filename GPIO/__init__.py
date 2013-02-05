@@ -10,15 +10,15 @@ import wiringpi
 
 import logging
 
+# Global Definitions
+GPIO_MODE_OUTPUT = 0
+GPIO_MODE_INPUT = 1
+
+GPIO_RISING_FLANK = 0
+GPIO_FALLING_FLANK = 1
+GPIO_EVERY_FLANK = 2
+
 class GPIOController(object):
-    # Global Definitions
-    GPIO_MODE_OUTPUT = 0
-    GPIO_MODE_INPUT = 1
-
-    GPIO_RISING_FLANK = 0
-    GPIO_FALLING_FLANK = 1
-    GPIO_EVERY_FLANK = 2
-
     '''
     @summary: Class for GPIO usage
     '''
@@ -26,7 +26,6 @@ class GPIOController(object):
         self.logger = logging.getLogger("HomeSystem")
 
         self.pinConfiguration = {}
-        self.reactToFlank = GPIOController.GPIO_EVERY_FLANK
         self.stop = True
 
         # Set GPIO Pins
@@ -100,12 +99,12 @@ class GPIOController(object):
                     continue
 
                 if inp[i] < inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_RISING_FLANK:
+                    self.pinConfiguration[i].get("flank", None) != GPIO_RISING_FLANK:
                     inp = inpNew
                     continue
 
                 if inp[i] > inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) != GPIOController.GPIO_FALLING_FLANK:
+                    self.pinConfiguration[i].get("flank", None) != GPIO_FALLING_FLANK:
                     inp = inpNew
                     continue
 
