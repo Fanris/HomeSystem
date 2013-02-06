@@ -97,6 +97,7 @@ class HomeSystem(object):
         @param pin: the pin which changed its value
         @result:
         '''
+        self.logger.info("Pin {} geaendert".format(pin))
         if pin == 0:
             Scenes.Licht_Bad_Rollade()
 
@@ -121,6 +122,7 @@ class HomeSystem(object):
             commandDict = json.loads(data)
         except ValueError:
             self.logger.warning("Kann Kommando nicht parsen: {}".format(data))
+            return
 
         # Run command....
         self.logger.debug("Run command {}".format(commandDict.get("command", None)))

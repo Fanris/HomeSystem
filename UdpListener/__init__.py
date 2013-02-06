@@ -63,5 +63,5 @@ class UdpListener(object):
         @result:
         '''
         self.logger.debug("Broadcast received: {}".format(message))
-        self.receiver.messageReceived(senderIp, senderPort, message)
+        self.receiver.messageReceived(message, senderIp, senderPort)
 

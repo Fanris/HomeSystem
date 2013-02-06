@@ -18,7 +18,6 @@ logger = logging.getLogger("HomeSystem")
 processController = SubProcessController()
 p = Pyrowl("61d552cdbd5ed63e5590ea0ef0cd6665508f6406")
 
-@staticmethod
 def Licht_Bad_Rollade():
     logger.info("Licht Bad und Rollade")
     processController.startProcess("wget",
@@ -27,8 +26,6 @@ def Licht_Bad_Rollade():
         "--http-password=wago",
         "-q")
 
-
-@staticmethod
 def Licht_Wohnzimmer_Musik():
     logger.info("Licht Wohnzimmer und Musik")
     processController.startProcess("wget",
@@ -39,7 +36,6 @@ def Licht_Wohnzimmer_Musik():
     p.push("Raspi", 'Haus', 'Test', batch_mode=False)
 
 
-@staticmethod
 def Licht_Wohnzimmer_Fernsehr():
     logger.info("Licht Wohnzimmer und Fernseher")
     processController.startProcess("wget",

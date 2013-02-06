@@ -94,23 +94,25 @@ class GPIOController(object):
             inpNew = self.getGPIOInput()
 
             for i in inpNew.keys():
-                if inp[i] == inpNew[i]:
-                    inp = inpNew
-                    continue
-
                 if inp[i] < inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) != GPIO_RISING_FLANK:
+                    self.pinConfiguration[i].get("flank", None) == GPIO_RISING_FLANK:
                     inp = inpNew
-                    continue
+                    func = self.pinConfiguration[i].get("callback", None)
+                    if func:
+                        func(i)
 
-                if inp[i] > inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) != GPIO_FALLING_FLANK:
+                elif inp[i] > inpNew[i] and \
+                    self.pinConfiguration[i].get("flank", None) == GPIO_FALLING_FLANK:
                     inp = inpNew
-                    continue
+                    func = self.pinConfiguration[i].get("callback", None)
+                    if func:
+                        func(i)
 
-                self.logger.debug("Input {} hat sich aendert: {} -> {}".format(i, inp[i], inpNew[i]))
-                func = self.pinConfiguration[i].get("callback", None)
-                if func:
-                    func(i)
+                elif inp[i] != inpNew[i] and \
+                    self.pinConfiguration[i].get("flank", None) == GPIO_EVERY_FLANK
+                    inp = inpNew
+                    func = self.pinConfiguration[i].get("callback", None)
+                    if func:
+                        func(i)
 
             inp = inpNew
