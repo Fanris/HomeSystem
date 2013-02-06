@@ -126,10 +126,10 @@ class HomeSystem(object):
         inp = self.gpio.getGPIOInput()
         for pin in inp.keys():
             if inp[pin] == 0:
-                self.logger("{} ist 0. Tue nichts.".format(pin))
+                self.logger.debug("{} ist 0. Tue nichts.".format(pin))
                 return
 
-        self.logger.info("Mach alles aus in 10")
+        self.logger.info("Schalte alles ab in 5 Minuten")
         DelayedCaller.CallDelayed("AllOff", 300, function=Scenes.Alles_Aus)
 
     def messageReceived(self, data, host, port):
