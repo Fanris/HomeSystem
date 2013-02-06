@@ -13,7 +13,7 @@ from pyrowl import Pyrowl
 from UdpListener import UdpListener
 
 # GPIO
-from GPIO import *
+import GPIO
 
 # SubProcessHandler
 from SubProcess import SubProcessController
@@ -58,9 +58,9 @@ class HomeSystem(object):
 
         # Setup GPIO
         self.logger.info("Initialisiere GPIO Controller")
-        self.gpio = GPIOController()
+        self.gpio = GPIO.GPIOController()
         self.setupGPIOPins()
-        self.gpio.startGPIOLoop(self.reactToGPIOFlank)
+        self.gpio.startGPIOLoop()
 
         # Setting up twisted
 	try:
@@ -117,7 +117,10 @@ class HomeSystem(object):
         # Command Parser
         # ===================================
         self.logger.debug("Message received: {}".format(data))
-        commandDict = json.loads(data)
+        try:
+            commandDict = json.loads(data)
+        except ValueError:
+            self.logger.warning("Kann Kommando nicht parsen: {}".format(data))
 
         # Run command....
         self.logger.debug("Run command {}".format(commandDict.get("command", None)))
