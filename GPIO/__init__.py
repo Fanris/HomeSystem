@@ -109,7 +109,7 @@ class GPIOController(object):
                         func(i)
 
                 elif inp[i] != inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) == GPIO_EVERY_FLANK
+                    self.pinConfiguration[i].get("flank", None) == GPIO_EVERY_FLANK:
                     inp = inpNew
                     func = self.pinConfiguration[i].get("callback", None)
                     if func:
