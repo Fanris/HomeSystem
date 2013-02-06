@@ -8,6 +8,9 @@ Uses the Twisted Package
 
 from twisted.internet import reactor
 
+import logging
+
+logger = logging.getLogger("HomeSystem")
 delayedFunctions = {}
 
 def CallDelayed(id, delay, function, *args, **kw):
@@ -21,7 +24,7 @@ def CallDelayed(id, delay, function, *args, **kw):
     @param **kw: keyword arguments to pass to the function.
     @result:
     '''
-
+    
     delayedFunctions[id] = reactor.callLater(delay, function, *args, **kw)
     reactor.callLater(delay + 5, StopDelayed, id)
 
@@ -32,7 +35,12 @@ def StopDelayed(id):
     @result:
     '''
     func = delayedFunctions.get(id, None)
-    if func and func.active:
-        func.cancel()
+    if not func:
+        return
 
-    del delayedFunctions[id]
+    try:
+        func.cancel()
+    except:
+        pass
+    finally:
+        del delayedFunctions[id]

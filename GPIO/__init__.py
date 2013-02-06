@@ -31,21 +31,35 @@ class GPIOController(object):
         # Set GPIO Pins
         self.io = wiringpi.GPIO(wiringpi.GPIO.WPI_MODE_PINS)
 
-    def setGPIOPin(self, pin, callback=None, mode=None, reactToFlank=GPIO_EVERY_FLANK):
+    def setGPIOPin(self, pin, everyFlank=None, fallingFlank=None,
+        risingFlank=None, mode=None):
         '''
         @summary: Sets the GPIO pin to Input Mode
         @param pin: The pin number
         @param mode:
         @result:
         '''
+        if type(everyFlank) != type([]):
+            everyFlank = [everyFlank]
+        if type(fallingFlank)!= type([]):
+            fallingFlank = [fallingFlank]
+        if type(risingFlank) != type([]):
+            risingFlank = [risingFlank]
+
         if mode == 1:
             self.io.pinMode(pin, self.io.INPUT)
-            self.pinConfiguration[pin] = { "mode": mode, "flank": reactToFlank,
-                "callback": callback}
+            self.pinConfiguration[pin] = { "mode": mode, 
+		"every_flank": everyFlank,
+                "falling_flank": fallingFlank,
+                "rising_flank": risingFlank,
+            }
         elif mode == 0:
             self.io.pinMode(pin, self.io.OUTPUT)
-            self.pinConfiguration[pin] = { "mode": mode, "flank": reactToFlank,
-                "callback": callback}
+            self.pinConfiguration[pin] = { "mode": mode,
+                "every_flank": everyFlank,
+                "falling_flank": fallingFlank,
+                "rising_flank": risingFlank,
+            }
 
 
     def getGPIOInput(self):
@@ -60,7 +74,6 @@ class GPIOController(object):
                 returnDict[pin] = self.io.digitalRead(pin)
 
         return returnDict
-
 
     def startGPIOLoop(self):
         '''
@@ -94,25 +107,20 @@ class GPIOController(object):
             inpNew = self.getGPIOInput()
 
             for i in inpNew.keys():
-                if inp[i] < inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) == GPIO_RISING_FLANK:
+                if inp[i] < inpNew[i]:
                     inp = inpNew
-                    func = self.pinConfiguration[i].get("callback", None)
-                    if func:
-                        func(i)
+                    functions = self.pinConfiguration[i].get("rising_flank", [])
+                    functions.extend(self.pinConfiguration[i].get("every_flank", []))
+                    for func in functions:
+                        if func:
+                            reactor.callFromThread(func, i)
 
-                elif inp[i] > inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) == GPIO_FALLING_FLANK:
+                elif inp[i] > inpNew[i]:
                     inp = inpNew
-                    func = self.pinConfiguration[i].get("callback", None)
-                    if func:
-                        func(i)
-
-                elif inp[i] != inpNew[i] and \
-                    self.pinConfiguration[i].get("flank", None) == GPIO_EVERY_FLANK:
-                    inp = inpNew
-                    func = self.pinConfiguration[i].get("callback", None)
-                    if func:
-                        func(i)
+                    functions = self.pinConfiguration[i].get("falling_flank", [])
+                    functions.extend(self.pinConfiguration[i].get("every_flank", []))
+                    for func in functions:
+                        if func:
+                            reactor.callFromThread(func, i)
 
             inp = inpNew

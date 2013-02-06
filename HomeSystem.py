@@ -21,6 +21,9 @@ from SubProcess import SubProcessController
 # Scenes
 import Scenes
 
+# Delayed Caller
+import DelayedCaller
+
 # Twisted
 from twisted.internet import reactor
 
@@ -75,23 +78,33 @@ class HomeSystem(object):
         @summary: Configures the GPIO Pins
         @result:
         '''
-        self.gpio.setGPIOPin(0, self.reactToGPIOFlank,
-            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+        self.gpio.setGPIOPin(0, 
+            fallingFlank=self.reactToGPIOFallingFlank,
+            risingFlank=self.reactToGPIORisingFlank,
+            mode=GPIO.GPIO_MODE_INPUT)
 
-        self.gpio.setGPIOPin(3, self.reactToGPIOFlank,
-            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+        self.gpio.setGPIOPin(3, 
+            fallingFlank=self.reactToGPIOFallingFlank,
+            risingFlank=self.reactToGPIORisingFlank,
+            mode=GPIO.GPIO_MODE_INPUT)
 
-        self.gpio.setGPIOPin(4, self.reactToGPIOFlank,
-            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+        self.gpio.setGPIOPin(4, 
+            fallingFlank=self.reactToGPIOFallingFlank,
+            risingFlank=self.reactToGPIORisingFlank,
+            mode=GPIO.GPIO_MODE_INPUT)
 
-        self.gpio.setGPIOPin(5, self.reactToGPIOFlank,
-            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+        self.gpio.setGPIOPin(5, 
+            fallingFlank=self.reactToGPIOFallingFlank,
+            risingFlank=self.reactToGPIORisingFlank,
+            mode=GPIO.GPIO_MODE_INPUT)
 
-        self.gpio.setGPIOPin(6, self.reactToGPIOFlank,
-            mode=GPIO.GPIO_MODE_INPUT, reactToFlank=GPIO.GPIO_FALLING_FLANK)
+        self.gpio.setGPIOPin(6, 
+            fallingFlank=self.reactToGPIOFallingFlank,
+            risingFlank=self.reactToGPIORisingFlank,
+            mode=GPIO.GPIO_MODE_INPUT)
 
 
-    def reactToGPIOFlank(self, pin):
+    def reactToGPIOFallingFlank(self, pin):
         '''
         @summary: Is called when a GPIO-Pin changes its value
         @param pin: the pin which changed its value
@@ -106,6 +119,18 @@ class HomeSystem(object):
 
         if pin == 4:
             Scenes.Licht_Wohnzimmer_Fernsehr()
+
+        DelayedCaller.StopDelayed("AllOff")
+
+    def reactToGPIORisingFlank(self, pin):
+        inp = self.gpio.getGPIOInput()
+        for pin in inp.keys():
+            if inp[pin] == 0:
+                self.logger("{} ist 0. Tue nichts.".format(pin))
+                return
+
+        self.logger.info("Mach alles aus in 10")
+        DelayedCaller.CallDelayed("AllOff", 300, function=Scenes.Alles_Aus)
 
     def messageReceived(self, data, host, port):
         '''

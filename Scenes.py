@@ -46,3 +46,11 @@ def Licht_Wohnzimmer_Fernsehr():
 
     processController.startProcess("wget",
         "http://192.168.191.9/web/powerstate?newstate=4")
+
+def Alles_Aus():
+    logger.info("Schalte alles aus.")
+    processController.startProcess("wget",
+        "http://192.168.191.10:80/rasp_0_Haus_Aus.ssi",
+        "--http-user=admin",
+        "--http-password=wago",
+        "-q")
